@@ -1,0 +1,105 @@
+<!--pages/category/category.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">分类管理</text>
+    <view class="add-btn" bindtap="showAddCategory">
+      <text class="add-icon">+</text>
+    </view>
+  </view>
+
+  <!-- 分类列表 -->
+  <view class="category-list">
+    <view class="category-item" wx:for="{{categories}}" wx:key="id">
+      <view class="category-info">
+        <view class="category-icon" style="background-color: {{item.color}}">
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <view class="category-details">
+          <text class="category-name">{{item.name}}</text>
+          <text class="category-desc">点击编辑分类信息</text>
+        </view>
+      </view>
+      <view class="category-actions">
+        <view class="action-btn edit-btn" bindtap="editCategory" data-id="{{item.id}}">
+          <text class="action-text">编辑</text>
+        </view>
+        <view class="action-btn delete-btn" bindtap="deleteCategory" data-id="{{item.id}}" wx:if="{{item.id > 6}}">
+          <text class="action-text">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加/编辑分类对话框 -->
+  <view class="modal-overlay" wx:if="{{showAddDialog}}" bindtap="hideAddDialog">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">{{editingId ? '编辑分类' : '添加分类'}}</text>
+        <view class="close-btn" bindtap="hideAddDialog">
+          <text class="close-icon">×</text>
+        </view>
+      </view>
+      
+      <view class="modal-body">
+        <!-- 分类名称输入 -->
+        <view class="input-group">
+          <text class="input-label">分类名称</text>
+          <input class="category-input" 
+                 placeholder="请输入分类名称" 
+                 value="{{newCategoryName}}"
+                 bindinput="onCategoryNameInput" />
+        </view>
+        
+        <!-- 颜色选择 -->
+        <view class="input-group">
+          <text class="input-label">选择颜色</text>
+          <view class="color-picker">
+            <view class="color-item {{selectedColor === item ? 'selected' : ''}}" 
+                  wx:for="{{colors}}" 
+                  wx:key="*this"
+                  style="background-color: {{item}}"
+                  bindtap="selectColor"
+                  data-color="{{item}}">
+              <text class="check-icon" wx:if="{{selectedColor === item}}">✓</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 图标选择 -->
+        <view class="input-group">
+          <text class="input-label">选择图标</text>
+          <view class="icon-picker">
+            <view class="icon-item {{selectedIcon === item ? 'selected' : ''}}" 
+                  wx:for="{{icons}}" 
+                  wx:key="*this"
+                  bindtap="selectIcon"
+                  data-icon="{{item}}">
+              <text class="icon-emoji">{{item}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 预览 -->
+        <view class="input-group">
+          <text class="input-label">预览效果</text>
+          <view class="preview-item">
+            <view class="preview-icon" style="background-color: {{selectedColor}}">
+              <text class="preview-emoji">{{selectedIcon}}</text>
+            </view>
+            <text class="preview-name">{{newCategoryName || '分类名称'}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <view class="modal-btn cancel-btn" bindtap="hideAddDialog">
+          <text class="btn-text">取消</text>
+        </view>
+        <view class="modal-btn confirm-btn" bindtap="{{editingId ? 'saveEdit' : 'addCategory'}}">
+          <text class="btn-text">{{editingId ? '保存' : '添加'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
