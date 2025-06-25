@@ -1,0 +1,131 @@
+<!--pages/index/index.wxml-->
+<view class="page-container">
+  <!-- 顶部统计卡片 -->
+  <view class="stats-container">
+    <view class="stats-card">
+      <view class="stats-item">
+        <view class="stats-number text-danger">{{expiredCount}}</view>
+        <view class="stats-label">已过期</view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-number text-warning">{{warningCount}}</view>
+        <view class="stats-label">即将到期</view>
+      </view>
+      <view class="stats-item">
+        <view class="stats-number text-success">{{normalCount}}</view>
+        <view class="stats-label">正常</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速操作区域 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="quickAddReminder">
+      <view class="action-icon">📝</view>
+      <view class="action-text">快速添加</view>
+    </view>
+    <view class="action-item" bindtap="scanCode">
+      <view class="action-icon">📷</view>
+      <view class="action-text">扫码识别</view>
+    </view>
+    <view class="action-item" bindtap="takePhoto">
+      <view class="action-icon">📸</view>
+      <view class="action-text">拍照识别</view>
+    </view>
+    <view class="action-item" bindtap="voiceInput">
+      <view class="action-icon">🎤</view>
+      <view class="action-text">语音输入</view>
+    </view>
+  </view>
+
+  <!-- 筛选和排序 -->
+  <view class="filter-bar">
+    <view class="filter-left">
+      <picker bindchange="onCategoryChange" value="{{categoryIndex}}" range="{{categories}}" range-key="name">
+        <view class="filter-item">
+          <text>{{categories[categoryIndex].name}}</text>
+          <text class="filter-arrow">▼</text>
+        </view>
+      </picker>
+      <picker bindchange="onSortChange" value="{{sortIndex}}" range="{{sortOptions}}">
+        <view class="filter-item">
+          <text>{{sortOptions[sortIndex]}}</text>
+          <text class="filter-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+    <view class="filter-right">
+      <view class="search-box">
+        <input class="search-input" placeholder="搜索提醒..." value="{{searchKeyword}}" bindinput="onSearchInput" />
+        <view class="search-icon">🔍</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提醒列表 -->
+  <view class="reminder-list">
+    <block wx:if="{{filteredReminders.length > 0}}">
+      <view class="reminder-item {{item.status}}" wx:for="{{filteredReminders}}" wx:key="id" bindtap="viewDetail" data-id="{{item.id}}">
+        <view class="reminder-left">
+          <view class="reminder-icon" style="background-color: {{item.category.color}}">
+            {{item.category.icon}}
+          </view>
+          <view class="reminder-content">
+            <view class="reminder-title">{{item.title}}</view>
+            <view class="reminder-desc">{{item.description}}</view>
+            <view class="reminder-category">
+              <text class="category-tag" style="background-color: {{item.category.color}}20; color: {{item.category.color}}">{{item.category.name}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="reminder-right">
+          <view class="reminder-date {{item.status}}">
+            <view class="date-text">{{item.expireDateText}}</view>
+            <view class="days-text">{{item.daysText}}</view>
+          </view>
+          <view class="reminder-actions">
+            <view class="action-btn" bindtap="toggleComplete" data-id="{{item.id}}" catchtap="true">
+              <text class="action-icon">{{item.isCompleted ? '✅' : '⭕'}}</text>
+            </view>
+            <view class="action-btn" bindtap="editReminder" data-id="{{item.id}}" catchtap="true">
+              <text class="action-icon">✏️</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+    
+    <!-- 空状态 -->
+    <view class="empty-state" wx:else>
+      <view class="empty-icon">📋</view>
+      <view class="empty-text">暂无提醒事项</view>
+      <view class="empty-desc">点击下方按钮添加您的第一个提醒</view>
+      <button class="btn btn-primary btn-round" bindtap="navigateToAdd">立即添加</button>
+    </view>
+  </view>
+
+  <!-- 浮动添加按钮 -->
+  <view class="fab" bindtap="navigateToAdd">
+    <text class="fab-icon">+</text>
+  </view>
+
+  <!-- 智能建议弹窗 -->
+  <view class="suggestion-modal {{showSuggestion ? 'show' : ''}}" bindtap="hideSuggestion">
+    <view class="suggestion-content" catchtap="true">
+      <view class="suggestion-header">
+        <text class="suggestion-title">智能建议</text>
+        <text class="suggestion-close" bindtap="hideSuggestion">×</text>
+      </view>
+      <view class="suggestion-body">
+        <view class="suggestion-item" wx:for="{{suggestions}}" wx:key="index" bindtap="applySuggestion" data-suggestion="{{item}}">
+          <view class="suggestion-icon">{{item.icon}}</view>
+          <view class="suggestion-text">
+            <view class="suggestion-name">{{item.name}}</view>
+            <view class="suggestion-desc">{{item.description}}</view>
+          </view>
+          <view class="suggestion-arrow">→</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

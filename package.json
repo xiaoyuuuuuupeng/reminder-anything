@@ -1,0 +1,47 @@
+{
+  "name": "reminder-anything",
+  "version": "1.0.0",
+  "description": "智能提醒助手 - 基于微信小程序的智能到期提醒应用",
+  "main": "app.js",
+  "scripts": {
+    "dev": "微信开发者工具打开项目进行开发",
+    "build": "微信开发者工具构建项目",
+    "lint": "eslint pages utils --ext .js",
+    "format": "prettier --write pages/**/*.js utils/**/*.js"
+  },
+  "keywords": [
+    "微信小程序",
+    "提醒",
+    "智能助手",
+    "OCR",
+    "AI",
+    "到期提醒",
+    "生活助手"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/reminder-anything.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/reminder-anything/issues"
+  },
+  "homepage": "https://github.com/yourusername/reminder-anything#readme",
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.25.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "prettier": "^2.8.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "miniprogram": {
+    "appid": "your-appid-here",
+    "libVersion": "2.19.4",
+    "compileType": "miniprogram"
+  }
+}

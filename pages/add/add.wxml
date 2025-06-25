@@ -1,0 +1,303 @@
+<!--pages/add/add.wxml-->
+<view class="page-container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">{{isEdit ? '编辑提醒' : '添加提醒'}}</text>
+    <text class="page-subtitle">{{isEdit ? '修改您的提醒信息' : '创建一个新的提醒事项'}}</text>
+  </view>
+
+  <!-- 智能输入区域 -->
+  <view class="smart-input-section" wx:if="{{!isEdit}}">
+    <view class="section-title">
+      <text class="title-icon">🤖</text>
+      <text class="title-text">智能输入</text>
+    </view>
+    
+    <view class="input-methods">
+      <view class="method-item" bindtap="scanCode">
+        <view class="method-icon">📷</view>
+        <view class="method-text">扫码识别</view>
+      </view>
+      <view class="method-item" bindtap="takePhoto">
+        <view class="method-icon">📸</view>
+        <view class="method-text">拍照识别</view>
+      </view>
+      <view class="method-item" bindtap="voiceInput">
+        <view class="method-icon">🎤</view>
+        <view class="method-text">语音输入</view>
+      </view>
+      <view class="method-item" bindtap="showTemplates">
+        <view class="method-icon">📋</view>
+        <view class="method-text">快速模板</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 基本信息表单 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-icon">📝</text>
+      <text class="title-text">基本信息</text>
+    </view>
+
+    <!-- 提醒标题 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">提醒标题</text>
+        <text class="label-required">*</text>
+      </view>
+      <input class="form-input {{titleError ? 'error' : ''}}" 
+             placeholder="请输入提醒标题" 
+             value="{{formData.title}}" 
+             bindinput="onTitleInput" 
+             maxlength="50" />
+      <view class="input-counter">{{formData.title.length}}/50</view>
+      <view class="form-error" wx:if="{{titleError}}">{{titleError}}</view>
+    </view>
+
+    <!-- 提醒描述 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">详细描述</text>
+      </view>
+      <textarea class="form-textarea" 
+                placeholder="请输入详细描述（可选）" 
+                value="{{formData.description}}" 
+                bindinput="onDescriptionInput" 
+                maxlength="200" 
+                auto-height></textarea>
+      <view class="input-counter">{{formData.description.length}}/200</view>
+    </view>
+
+    <!-- 分类选择 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">选择分类</text>
+        <text class="label-required">*</text>
+      </view>
+      <view class="category-grid">
+        <view class="category-item {{item.id === formData.categoryId ? 'active' : ''}}" 
+              wx:for="{{categories}}" 
+              wx:key="id" 
+              bindtap="selectCategory" 
+              data-id="{{item.id}}">
+          <view class="category-icon" style="background-color: {{item.color}}">
+            {{item.icon}}
+          </view>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 时间设置 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-icon">⏰</text>
+      <text class="title-text">时间设置</text>
+    </view>
+
+    <!-- 到期日期 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">到期日期</text>
+        <text class="label-required">*</text>
+      </view>
+      <picker mode="date" 
+              value="{{formData.expireDate}}" 
+              start="{{today}}" 
+              bindchange="onExpireDateChange">
+        <view class="date-picker {{!formData.expireDate ? 'placeholder' : ''}}">
+          <text class="date-text">{{formData.expireDate || '请选择到期日期'}}</text>
+          <text class="date-icon">📅</text>
+        </view>
+      </picker>
+      <view class="form-error" wx:if="{{dateError}}">{{dateError}}</view>
+    </view>
+
+    <!-- 智能日期建议 -->
+    <view class="date-suggestions" wx:if="{{dateSuggestions.length > 0}}">
+      <view class="suggestions-title">💡 智能建议</view>
+      <view class="suggestions-list">
+        <view class="suggestion-item" 
+              wx:for="{{dateSuggestions}}" 
+              wx:key="index" 
+              bindtap="appleDateSuggestion" 
+              data-date="{{item.date}}">
+          <text class="suggestion-text">{{item.text}}</text>
+          <text class="suggestion-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提醒时间 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">提醒时间</text>
+      </view>
+      <picker mode="time" 
+              value="{{formData.remindTime}}" 
+              bindchange="onRemindTimeChange">
+        <view class="time-picker">
+          <text class="time-text">{{formData.remindTime || '09:00'}}</text>
+          <text class="time-icon">🕘</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 提前提醒天数 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text class="label-text">提前提醒</text>
+      </view>
+      <view class="remind-days-options">
+        <view class="remind-option {{item === formData.remindDays ? 'active' : ''}}" 
+              wx:for="{{remindDaysOptions}}" 
+              wx:key="*this" 
+              bindtap="selectRemindDays" 
+              data-days="{{item}}">
+          <text>{{item === 0 ? '当天' : item + '天前'}}</text>
+        </view>
+      </view>
+      
+      <!-- 自定义天数 -->
+      <view class="custom-days" wx:if="{{showCustomDays}}">
+        <input class="custom-input" 
+               type="number" 
+               placeholder="自定义天数" 
+               value="{{customRemindDays}}" 
+               bindinput="onCustomDaysInput" />
+        <text class="custom-unit">天前</text>
+      </view>
+      
+      <view class="custom-toggle" bindtap="toggleCustomDays">
+        <text>{{showCustomDays ? '使用预设' : '自定义天数'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 高级设置 -->
+  <view class="form-section">
+    <view class="section-title" bindtap="toggleAdvanced">
+      <text class="title-icon">⚙️</text>
+      <text class="title-text">高级设置</text>
+      <text class="toggle-icon">{{showAdvanced ? '▼' : '▶'}}</text>
+    </view>
+
+    <view class="advanced-content" wx:if="{{showAdvanced}}">
+      <!-- 重复设置 -->
+      <view class="form-group">
+        <view class="form-label">
+          <text class="label-text">重复提醒</text>
+        </view>
+        <picker bindchange="onRepeatChange" value="{{repeatIndex}}" range="{{repeatOptions}}">
+          <view class="repeat-picker">
+            <text>{{repeatOptions[repeatIndex]}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 优先级设置 -->
+      <view class="form-group">
+        <view class="form-label">
+          <text class="label-text">优先级</text>
+        </view>
+        <view class="priority-options">
+          <view class="priority-item {{item.value === formData.priority ? 'active' : ''}}" 
+                wx:for="{{priorityOptions}}" 
+                wx:key="value" 
+                bindtap="selectPriority" 
+                data-priority="{{item.value}}">
+            <text class="priority-icon">{{item.icon}}</text>
+            <text class="priority-text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 标签设置 -->
+      <view class="form-group">
+        <view class="form-label">
+          <text class="label-text">标签</text>
+        </view>
+        <view class="tags-input">
+          <view class="tag-item" wx:for="{{formData.tags}}" wx:key="*this">
+            <text class="tag-text">{{item}}</text>
+            <text class="tag-remove" bindtap="removeTag" data-index="{{index}}">×</text>
+          </view>
+          <input class="tag-input" 
+                 placeholder="添加标签" 
+                 value="{{newTag}}" 
+                 bindinput="onTagInput" 
+                 bindconfirm="addTag" />
+        </view>
+      </view>
+
+      <!-- 通知设置 -->
+      <view class="form-group">
+        <view class="form-label">
+          <text class="label-text">通知方式</text>
+        </view>
+        <view class="notification-options">
+          <view class="notification-item">
+            <switch checked="{{formData.enableWechatNotify}}" 
+                    bindchange="onWechatNotifyChange" />
+            <text class="notification-text">微信通知</text>
+          </view>
+          <view class="notification-item">
+            <switch checked="{{formData.enableAppNotify}}" 
+                    bindchange="onAppNotifyChange" />
+            <text class="notification-text">应用内通知</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="btn btn-secondary btn-large" bindtap="cancel">取消</button>
+    <button class="btn btn-primary btn-large" 
+            bindtap="save" 
+            disabled="{{saving}}" 
+            loading="{{saving}}">
+      {{saving ? '保存中...' : (isEdit ? '更新' : '保存')}}
+    </button>
+  </view>
+
+  <!-- 删除按钮（编辑模式） -->
+  <view class="delete-section" wx:if="{{isEdit}}">
+    <button class="btn btn-danger btn-block" bindtap="deleteReminder">
+      删除此提醒
+    </button>
+  </view>
+</view>
+
+<!-- 模板选择弹窗 -->
+<view class="template-modal {{showTemplateModal ? 'show' : ''}}" bindtap="hideTemplateModal">
+  <view class="template-content" catchtap="true">
+    <view class="template-header">
+      <text class="template-title">快速模板</text>
+      <text class="template-close" bindtap="hideTemplateModal">×</text>
+    </view>
+    <view class="template-body">
+      <view class="template-category" wx:for="{{templateCategories}}" wx:key="name">
+        <view class="template-category-title">{{item.name}}</view>
+        <view class="template-list">
+          <view class="template-item" 
+                wx:for="{{item.templates}}" 
+                wx:key="id" 
+                wx:for-item="template"
+                bindtap="applyTemplate" 
+                data-template="{{template}}">
+            <view class="template-icon">{{template.icon}}</view>
+            <view class="template-info">
+              <view class="template-name">{{template.name}}</view>
+              <view class="template-desc">{{template.description}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

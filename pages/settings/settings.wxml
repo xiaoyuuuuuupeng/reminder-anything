@@ -1,0 +1,389 @@
+<!--pages/settings/settings.wxml-->
+<view class="settings-page">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="header-title">设置</view>
+    <view class="header-subtitle">个性化配置与数据管理</view>
+  </view>
+
+  <!-- 主要内容 -->
+  <scroll-view class="main-content" scroll-y="true">
+    <!-- 用户信息 -->
+    <view class="section user-section">
+      <view class="section-title">
+        <text class="title-icon">👤</text>
+        <text class="title-text">用户信息</text>
+      </view>
+      
+      <view class="user-card">
+        <view class="user-avatar">
+          <image src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+        </view>
+        <view class="user-details">
+          <view class="user-name">{{userInfo.nickName || '未登录'}}</view>
+          <view class="user-stats">已管理 {{userStats.total}} 个提醒</view>
+        </view>
+        <view class="user-actions">
+          <button wx:if="{{!userInfo.nickName}}" class="login-btn" open-type="getUserProfile" bindgetuserprofile="onGetUserProfile">
+            登录
+          </button>
+          <button wx:else class="logout-btn" bindtap="onLogout">
+            退出
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提醒设置 -->
+    <view class="section reminder-section">
+      <view class="section-title">
+        <text class="title-icon">⏰</text>
+        <text class="title-text">提醒设置</text>
+      </view>
+      
+      <view class="setting-list">
+        <!-- 默认提醒时间 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">默认提醒时间</view>
+            <view class="setting-desc">新建提醒的默认时间</view>
+          </view>
+          <picker mode="time" value="{{settings.defaultRemindTime}}" bindchange="onDefaultTimeChange">
+            <view class="setting-value">{{settings.defaultRemindTime}}</view>
+          </picker>
+        </view>
+        
+        <!-- 提前提醒天数 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">提前提醒天数</view>
+            <view class="setting-desc">默认提前几天提醒</view>
+          </view>
+          <picker mode="selector" range="{{remindDaysOptions}}" value="{{settings.defaultRemindDaysIndex}}" bindchange="onRemindDaysChange">
+            <view class="setting-value">{{remindDaysOptions[settings.defaultRemindDaysIndex]}}</view>
+          </picker>
+        </view>
+        
+        <!-- 重复提醒间隔 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">重复提醒间隔</view>
+            <view class="setting-desc">过期后重复提醒的间隔</view>
+          </view>
+          <picker mode="selector" range="{{repeatIntervalOptions}}" value="{{settings.repeatIntervalIndex}}" bindchange="onRepeatIntervalChange">
+            <view class="setting-value">{{repeatIntervalOptions[settings.repeatIntervalIndex]}}</view>
+          </picker>
+        </view>
+        
+        <!-- 静音时段 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">静音时段</view>
+            <view class="setting-desc">在此时段内不发送提醒</view>
+          </view>
+          <switch checked="{{settings.enableQuietHours}}" bindchange="onQuietHoursToggle" />
+        </view>
+        
+        <view wx:if="{{settings.enableQuietHours}}" class="quiet-hours-config">
+          <view class="time-range">
+            <picker mode="time" value="{{settings.quietHours.start}}" bindchange="onQuietStartChange">
+              <view class="time-picker">{{settings.quietHours.start}}</view>
+            </picker>
+            <text class="time-separator">至</text>
+            <picker mode="time" value="{{settings.quietHours.end}}" bindchange="onQuietEndChange">
+              <view class="time-picker">{{settings.quietHours.end}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 智能设置 -->
+    <view class="section ai-section">
+      <view class="section-title">
+        <text class="title-icon">🤖</text>
+        <text class="title-text">智能设置</text>
+      </view>
+      
+      <view class="setting-list">
+        <!-- 智能建议 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">智能日期建议</view>
+            <view class="setting-desc">根据物品类型智能推荐到期日期</view>
+          </view>
+          <switch checked="{{settings.enableSmartSuggestion}}" bindchange="onSmartSuggestionToggle" />
+        </view>
+        
+        <!-- 学习用户习惯 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">学习用户习惯</view>
+            <view class="setting-desc">根据历史记录优化建议准确性</view>
+          </view>
+          <switch checked="{{settings.enableLearning}}" bindchange="onLearningToggle" />
+        </view>
+        
+        <!-- 自动分类 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">自动分类</view>
+            <view class="setting-desc">根据物品名称自动选择分类</view>
+          </view>
+          <switch checked="{{settings.enableAutoCategory}}" bindchange="onAutoCategoryToggle" />
+        </view>
+        
+        <!-- OCR识别 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">OCR文字识别</view>
+            <view class="setting-desc">拍照时自动识别日期和文字</view>
+          </view>
+          <switch checked="{{settings.enableOCR}}" bindchange="onOCRToggle" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 分类管理 -->
+    <view class="section category-section">
+      <view class="section-title">
+        <text class="title-icon">📂</text>
+        <text class="title-text">分类管理</text>
+        <button class="add-category-btn" bindtap="onAddCategory">添加</button>
+      </view>
+      
+      <view class="category-list">
+        <view wx:for="{{categories}}" wx:key="id" class="category-item">
+          <view class="category-info">
+            <view class="category-icon" style="background-color: {{item.color}}">{{item.icon}}</view>
+            <view class="category-details">
+              <view class="category-name">{{item.name}}</view>
+              <view class="category-count">{{item.count}} 个提醒</view>
+            </view>
+          </view>
+          <view class="category-actions">
+            <button class="edit-btn" data-category="{{item}}" bindtap="onEditCategory">编辑</button>
+            <button wx:if="{{!item.isDefault}}" class="delete-btn" data-id="{{item.id}}" bindtap="onDeleteCategory">删除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 数据管理 -->
+    <view class="section data-section">
+      <view class="section-title">
+        <text class="title-icon">💾</text>
+        <text class="title-text">数据管理</text>
+      </view>
+      
+      <view class="data-stats">
+        <view class="stat-item">
+          <view class="stat-number">{{dataStats.totalReminders}}</view>
+          <view class="stat-label">总提醒数</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number">{{dataStats.storageSize}}</view>
+          <view class="stat-label">存储大小</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number">{{dataStats.lastBackup}}</view>
+          <view class="stat-label">最后备份</view>
+        </view>
+      </view>
+      
+      <view class="data-actions">
+        <button class="data-btn" bindtap="onExportData">
+          <text class="btn-icon">📤</text>
+          <text class="btn-text">导出数据</text>
+        </button>
+        <button class="data-btn" bindtap="onImportData">
+          <text class="btn-icon">📥</text>
+          <text class="btn-text">导入数据</text>
+        </button>
+        <button class="data-btn" bindtap="onBackupData">
+          <text class="btn-icon">☁️</text>
+          <text class="btn-text">云端备份</text>
+        </button>
+        <button class="data-btn danger" bindtap="onClearData">
+          <text class="btn-icon">🗑️</text>
+          <text class="btn-text">清空数据</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 通知设置 -->
+    <view class="section notification-section">
+      <view class="section-title">
+        <text class="title-icon">🔔</text>
+        <text class="title-text">通知设置</text>
+      </view>
+      
+      <view class="setting-list">
+        <!-- 微信通知 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">微信服务通知</view>
+            <view class="setting-desc">通过微信服务消息提醒</view>
+          </view>
+          <switch checked="{{settings.enableWechatNotification}}" bindchange="onWechatNotificationToggle" />
+        </view>
+        
+        <!-- 小程序通知 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">小程序通知</view>
+            <view class="setting-desc">在小程序内显示通知</view>
+          </view>
+          <switch checked="{{settings.enableAppNotification}}" bindchange="onAppNotificationToggle" />
+        </view>
+        
+        <!-- 声音提醒 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">声音提醒</view>
+            <view class="setting-desc">播放提醒音效</view>
+          </view>
+          <switch checked="{{settings.enableSound}}" bindchange="onSoundToggle" />
+        </view>
+        
+        <!-- 震动提醒 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">震动提醒</view>
+            <view class="setting-desc">震动提醒用户</view>
+          </view>
+          <switch checked="{{settings.enableVibration}}" bindchange="onVibrationToggle" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 其他设置 -->
+    <view class="section other-section">
+      <view class="section-title">
+        <text class="title-icon">⚙️</text>
+        <text class="title-text">其他设置</text>
+      </view>
+      
+      <view class="setting-list">
+        <!-- 主题设置 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">主题模式</view>
+            <view class="setting-desc">选择应用主题</view>
+          </view>
+          <picker mode="selector" range="{{themeOptions}}" value="{{settings.themeIndex}}" bindchange="onThemeChange">
+            <view class="setting-value">{{themeOptions[settings.themeIndex]}}</view>
+          </picker>
+        </view>
+        
+        <!-- 语言设置 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">语言</view>
+            <view class="setting-desc">选择界面语言</view>
+          </view>
+          <picker mode="selector" range="{{languageOptions}}" value="{{settings.languageIndex}}" bindchange="onLanguageChange">
+            <view class="setting-value">{{languageOptions[settings.languageIndex]}}</view>
+          </picker>
+        </view>
+        
+        <!-- 自动清理 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">自动清理过期提醒</view>
+            <view class="setting-desc">自动删除过期很久的提醒</view>
+          </view>
+          <switch checked="{{settings.enableAutoCleanup}}" bindchange="onAutoCleanupToggle" />
+        </view>
+        
+        <!-- 启动页 -->
+        <view class="setting-item">
+          <view class="setting-info">
+            <view class="setting-name">默认启动页</view>
+            <view class="setting-desc">打开小程序时的默认页面</view>
+          </view>
+          <picker mode="selector" range="{{startPageOptions}}" value="{{settings.startPageIndex}}" bindchange="onStartPageChange">
+            <view class="setting-value">{{startPageOptions[settings.startPageIndex]}}</view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 关于 -->
+    <view class="section about-section">
+      <view class="section-title">
+        <text class="title-icon">ℹ️</text>
+        <text class="title-text">关于</text>
+      </view>
+      
+      <view class="about-content">
+        <view class="app-info">
+          <view class="app-name">智能提醒助手</view>
+          <view class="app-version">版本 {{appVersion}}</view>
+          <view class="app-description">让生活更有序，让重要事情不再遗忘</view>
+        </view>
+        
+        <view class="about-actions">
+          <button class="about-btn" bindtap="onCheckUpdate">
+            <text class="btn-icon">🔄</text>
+            <text class="btn-text">检查更新</text>
+          </button>
+          <button class="about-btn" bindtap="onFeedback">
+            <text class="btn-icon">💬</text>
+            <text class="btn-text">意见反馈</text>
+          </button>
+          <button class="about-btn" bindtap="onShare">
+            <text class="btn-icon">📤</text>
+            <text class="btn-text">分享应用</text>
+          </button>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 分类编辑弹窗 -->
+  <view wx:if="{{showCategoryModal}}" class="modal-overlay" bindtap="onCloseCategoryModal">
+    <view class="category-modal" catchtap="">
+      <view class="modal-header">
+        <view class="modal-title">{{categoryModalTitle}}</view>
+        <button class="close-btn" bindtap="onCloseCategoryModal">×</button>
+      </view>
+      
+      <view class="modal-content">
+        <view class="form-item">
+          <view class="form-label">分类名称</view>
+          <input class="form-input" value="{{categoryForm.name}}" placeholder="请输入分类名称" bindinput="onCategoryNameInput" />
+        </view>
+        
+        <view class="form-item">
+          <view class="form-label">图标</view>
+          <view class="icon-grid">
+            <view wx:for="{{iconOptions}}" wx:key="*this" 
+                  class="icon-option {{categoryForm.icon === item ? 'selected' : ''}}" 
+                  data-icon="{{item}}" 
+                  bindtap="onSelectIcon">
+              {{item}}
+            </view>
+          </view>
+        </view>
+        
+        <view class="form-item">
+          <view class="form-label">颜色</view>
+          <view class="color-grid">
+            <view wx:for="{{colorOptions}}" wx:key="*this" 
+                  class="color-option {{categoryForm.color === item ? 'selected' : ''}}" 
+                  style="background-color: {{item}}" 
+                  data-color="{{item}}" 
+                  bindtap="onSelectColor">
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-actions">
+        <button class="cancel-btn" bindtap="onCloseCategoryModal">取消</button>
+        <button class="confirm-btn" bindtap="onSaveCategory">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,331 @@
+<!--pages/statistics/statistics.wxml-->
+<view class="statistics-page">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="header-title">数据统计</view>
+    <view class="header-subtitle">了解您的使用情况</view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">正在加载统计数据...</view>
+  </view>
+
+  <!-- 主要内容 -->
+  <scroll-view class="main-content" scroll-y wx:else>
+    <!-- 基础统计卡片 -->
+    <view class="stats-overview">
+      <view class="stats-card">
+        <view class="stats-number">{{basicStats.total}}</view>
+        <view class="stats-label">总提醒</view>
+      </view>
+      <view class="stats-card warning">
+        <view class="stats-number">{{basicStats.warning}}</view>
+        <view class="stats-label">即将到期</view>
+      </view>
+      <view class="stats-card danger">
+        <view class="stats-number">{{basicStats.expired}}</view>
+        <view class="stats-label">已过期</view>
+      </view>
+      <view class="stats-card success">
+        <view class="stats-number">{{basicStats.completed}}</view>
+        <view class="stats-label">已完成</view>
+      </view>
+    </view>
+
+    <!-- 时间范围选择 -->
+    <view class="time-range-selector">
+      <view class="range-tabs">
+        <view 
+          class="range-tab {{currentPeriod === 'week' ? 'active' : ''}}"
+          bindtap="switchPeriod"
+          data-period="week"
+        >
+          本周
+        </view>
+        <view 
+          class="range-tab {{currentPeriod === 'month' ? 'active' : ''}}"
+          bindtap="switchPeriod"
+          data-period="month"
+        >
+          本月
+        </view>
+        <view 
+          class="range-tab {{currentPeriod === 'year' ? 'active' : ''}}"
+          bindtap="switchPeriod"
+          data-period="year"
+        >
+          本年
+        </view>
+      </view>
+    </view>
+
+    <!-- 趋势图表 -->
+    <view class="chart-section">
+      <view class="section-title">
+        <text class="title-text">📈 趋势分析</text>
+      </view>
+      <view class="chart-container">
+        <canvas 
+          class="trend-chart" 
+          canvas-id="trendChart"
+          disable-scroll="true"
+        ></canvas>
+        <view class="chart-legend">
+          <view class="legend-item" wx:for="{{trendData.datasets}}" wx:key="label">
+            <view class="legend-color" style="background-color: {{item.color}}"></view>
+            <text class="legend-text">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分类统计 -->
+    <view class="category-section">
+      <view class="section-title">
+        <text class="title-text">📊 分类统计</text>
+      </view>
+      <view class="category-stats">
+        <view 
+          class="category-item" 
+          wx:for="{{categoryStats}}" 
+          wx:key="id"
+        >
+          <view class="category-info">
+            <view class="category-icon" style="background-color: {{item.color}}">{{item.icon}}</view>
+            <view class="category-details">
+              <view class="category-name">{{item.name}}</view>
+              <view class="category-count">{{item.total}}个提醒</view>
+            </view>
+          </view>
+          <view class="category-progress">
+            <view class="progress-bar">
+              <view 
+                class="progress-fill" 
+                style="width: {{item.percentage}}%; background-color: {{item.color}}"
+              ></view>
+            </view>
+            <view class="progress-text">{{item.percentage}}%</view>
+          </view>
+          <view class="category-status">
+            <view class="status-item">
+              <text class="status-label">正常</text>
+              <text class="status-value">{{item.normal}}</text>
+            </view>
+            <view class="status-item warning">
+              <text class="status-label">警告</text>
+              <text class="status-value">{{item.warning}}</text>
+            </view>
+            <view class="status-item danger">
+              <text class="status-label">过期</text>
+              <text class="status-value">{{item.expired}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 使用习惯分析 -->
+    <view class="usage-section">
+      <view class="section-title">
+        <text class="title-text">🕐 使用习惯</text>
+      </view>
+      
+      <!-- 时间偏好 -->
+      <view class="usage-card">
+        <view class="card-title">活跃时间段</view>
+        <view class="time-preferences">
+          <view class="time-slot">
+            <view class="time-label">上午</view>
+            <view class="time-bar">
+              <view 
+                class="time-fill" 
+                style="width: {{usageAnalysis.timePreferences.morning / basicStats.total * 100}}%"
+              ></view>
+            </view>
+            <view class="time-count">{{usageAnalysis.timePreferences.morning}}</view>
+          </view>
+          <view class="time-slot">
+            <view class="time-label">下午</view>
+            <view class="time-bar">
+              <view 
+                class="time-fill" 
+                style="width: {{usageAnalysis.timePreferences.afternoon / basicStats.total * 100}}%"
+              ></view>
+            </view>
+            <view class="time-count">{{usageAnalysis.timePreferences.afternoon}}</view>
+          </view>
+          <view class="time-slot">
+            <view class="time-label">晚上</view>
+            <view class="time-bar">
+              <view 
+                class="time-fill" 
+                style="width: {{usageAnalysis.timePreferences.evening / basicStats.total * 100}}%"
+              ></view>
+            </view>
+            <view class="time-count">{{usageAnalysis.timePreferences.evening}}</view>
+          </view>
+          <view class="time-slot">
+            <view class="time-label">深夜</view>
+            <view class="time-bar">
+              <view 
+                class="time-fill" 
+                style="width: {{usageAnalysis.timePreferences.night / basicStats.total * 100}}%"
+              ></view>
+            </view>
+            <view class="time-count">{{usageAnalysis.timePreferences.night}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 完成率 -->
+      <view class="usage-card">
+        <view class="card-title">完成率统计</view>
+        <view class="completion-stats">
+          <view class="completion-item">
+            <view class="completion-label">总体完成率</view>
+            <view class="completion-value">{{usageAnalysis.completionRate.overall}}%</view>
+            <view class="completion-bar">
+              <view 
+                class="completion-fill" 
+                style="width: {{usageAnalysis.completionRate.overall}}%"
+              ></view>
+            </view>
+          </view>
+          <view class="completion-item">
+            <view class="completion-label">本周完成率</view>
+            <view class="completion-value">{{usageAnalysis.completionRate.thisWeek}}%</view>
+            <view class="completion-bar">
+              <view 
+                class="completion-fill" 
+                style="width: {{usageAnalysis.completionRate.thisWeek}}%"
+              ></view>
+            </view>
+          </view>
+          <view class="completion-item">
+            <view class="completion-label">本月完成率</view>
+            <view class="completion-value">{{usageAnalysis.completionRate.thisMonth}}%</view>
+            <view class="completion-bar">
+              <view 
+                class="completion-fill" 
+                style="width: {{usageAnalysis.completionRate.thisMonth}}%"
+              ></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 活跃度 -->
+      <view class="usage-card">
+        <view class="card-title">活跃度分析</view>
+        <view class="activity-stats">
+          <view class="activity-item">
+            <view class="activity-number">{{usageAnalysis.activity.dailyAvg}}</view>
+            <view class="activity-label">日均添加</view>
+          </view>
+          <view class="activity-item">
+            <view class="activity-number">{{usageAnalysis.activity.weeklyAvg}}</view>
+            <view class="activity-label">周均添加</view>
+          </view>
+          <view class="activity-item">
+            <view class="activity-number">{{usageAnalysis.activity.peakHour}}:00</view>
+            <view class="activity-label">活跃时段</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 效率报告 -->
+    <view class="efficiency-section">
+      <view class="section-title">
+        <text class="title-text">🎯 效率报告</text>
+      </view>
+      
+      <view class="efficiency-card">
+        <view class="efficiency-header">
+          <view class="efficiency-score">
+            <view class="score-number">{{efficiencyReport.score}}</view>
+            <view class="score-label">效率评分</view>
+          </view>
+          <view class="efficiency-level">
+            <view class="level-badge level-{{efficiencyReport.level}}">
+              {{efficiencyReport.level === 'expert' ? '专家' : 
+                efficiencyReport.level === 'advanced' ? '高级' :
+                efficiencyReport.level === 'intermediate' ? '中级' : '初级'}}
+            </view>
+          </view>
+        </view>
+        
+        <view class="efficiency-metrics">
+          <view class="metric-item">
+            <view class="metric-label">按时完成率</view>
+            <view class="metric-value">{{efficiencyReport.metrics.onTimeCompletion}}%</view>
+          </view>
+          <view class="metric-item">
+            <view class="metric-label">平均响应时间</view>
+            <view class="metric-value">{{efficiencyReport.metrics.avgResponseTime}}小时</view>
+          </view>
+          <view class="metric-item">
+            <view class="metric-label">主动性评分</view>
+            <view class="metric-value">{{efficiencyReport.metrics.proactiveRate}}%</view>
+          </view>
+          <view class="metric-item">
+            <view class="metric-label">一致性评分</view>
+            <view class="metric-value">{{efficiencyReport.metrics.consistencyScore}}%</view>
+          </view>
+        </view>
+        
+        <!-- 洞察 -->
+        <view class="insights-section" wx:if="{{efficiencyReport.insights.length > 0}}">
+          <view class="insights-title">💡 数据洞察</view>
+          <view class="insights-list">
+            <view 
+              class="insight-item" 
+              wx:for="{{efficiencyReport.insights}}" 
+              wx:key="*this"
+            >
+              {{item}}
+            </view>
+          </view>
+        </view>
+        
+        <!-- 建议 -->
+        <view class="recommendations-section" wx:if="{{efficiencyReport.recommendations.length > 0}}">
+          <view class="recommendations-title">🚀 改进建议</view>
+          <view class="recommendations-list">
+            <view 
+              class="recommendation-item" 
+              wx:for="{{efficiencyReport.recommendations}}" 
+              wx:key="*this"
+            >
+              {{item}}
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-section">
+      <button class="action-btn" bindtap="exportData">
+        <text class="btn-icon">📤</text>
+        <text class="btn-text">导出数据</text>
+      </button>
+      <button class="action-btn secondary" bindtap="refreshData">
+        <text class="btn-icon">🔄</text>
+        <text class="btn-text">刷新数据</text>
+      </button>
+    </view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && basicStats.total === 0}}">
+    <view class="empty-icon">📊</view>
+    <view class="empty-title">暂无统计数据</view>
+    <view class="empty-description">添加一些提醒后就能看到详细的统计分析了</view>
+    <button class="empty-action" bindtap="goToAdd">
+      立即添加提醒
+    </button>
+  </view>
+</view>

@@ -1,0 +1,239 @@
+<!--pages/detail/detail.wxml-->
+<view class="detail-page">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="header-content">
+      <view class="status-badge status-{{reminder.status}}">
+        <text class="status-icon">{{statusConfig[reminder.status].icon}}</text>
+        <text class="status-text">{{statusConfig[reminder.status].text}}</text>
+      </view>
+      <view class="reminder-title">{{reminder.title}}</view>
+      <view class="reminder-meta">
+        <text class="meta-item">
+          <text class="icon">📅</text>
+          到期：{{expireDateText}}
+        </text>
+        <text class="meta-item" wx:if="{{reminder.remindDays > 0}}">
+          <text class="icon">⏰</text>
+          提前{{reminder.remindDays}}天提醒
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 主要内容 -->
+  <scroll-view class="main-content" scroll-y>
+    <!-- 基本信息卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">基本信息</text>
+        <button class="edit-btn" bindtap="editReminder">
+          <text class="icon">✏️</text>
+          编辑
+        </button>
+      </view>
+      
+      <view class="info-list">
+        <view class="info-item">
+          <text class="info-label">标题</text>
+          <text class="info-value">{{reminder.title}}</text>
+        </view>
+        
+        <view class="info-item" wx:if="{{reminder.description}}">
+          <text class="info-label">描述</text>
+          <text class="info-value">{{reminder.description}}</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">分类</text>
+          <view class="category-tag">
+            <text class="category-icon">{{categoryInfo.icon}}</text>
+            <text class="category-name">{{categoryInfo.name}}</text>
+          </view>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">到期日期</text>
+          <text class="info-value date-value">{{expireDateText}}</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">剩余时间</text>
+          <text class="info-value time-remaining {{timeRemainingClass}}">{{timeRemainingText}}</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">优先级</text>
+          <view class="priority-tag priority-{{reminder.priority}}">
+            <text class="priority-icon">{{priorityConfig[reminder.priority].icon}}</text>
+            <text class="priority-text">{{priorityConfig[reminder.priority].text}}</text>
+          </view>
+        </view>
+        
+        <view class="info-item" wx:if="{{reminder.tags && reminder.tags.length > 0}}">
+          <text class="info-label">标签</text>
+          <view class="tags-container">
+            <text class="tag" wx:for="{{reminder.tags}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提醒设置卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">提醒设置</text>
+      </view>
+      
+      <view class="info-list">
+        <view class="info-item">
+          <text class="info-label">提醒时间</text>
+          <text class="info-value">{{reminder.remindTime}}</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">提前天数</text>
+          <text class="info-value">{{reminder.remindDays}}天</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">重复设置</text>
+          <text class="info-value">{{repeatText}}</text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">微信通知</text>
+          <text class="info-value status-text {{reminder.enableWechatNotify ? 'enabled' : 'disabled'}}">
+            {{reminder.enableWechatNotify ? '已开启' : '已关闭'}}
+          </text>
+        </view>
+        
+        <view class="info-item">
+          <text class="info-label">应用通知</text>
+          <text class="info-value status-text {{reminder.enableAppNotify ? 'enabled' : 'disabled'}}">
+            {{reminder.enableAppNotify ? '已开启' : '已关闭'}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 历史记录卡片 -->
+    <view class="info-card" wx:if="{{historyList.length > 0}}">
+      <view class="card-header">
+        <text class="card-title">操作历史</text>
+      </view>
+      
+      <view class="history-list">
+        <view class="history-item" wx:for="{{historyList}}" wx:key="id">
+          <view class="history-icon">
+            <text class="icon">{{item.icon}}</text>
+          </view>
+          <view class="history-content">
+            <text class="history-action">{{item.action}}</text>
+            <text class="history-time">{{item.timeText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快速操作卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">快速操作</text>
+      </view>
+      
+      <view class="quick-actions">
+        <button class="action-btn" bindtap="markAsCompleted" wx:if="{{reminder.status !== 'completed'}}">
+          <text class="btn-icon">✅</text>
+          <text class="btn-text">标记完成</text>
+        </button>
+        
+        <button class="action-btn" bindtap="snoozeReminder" wx:if="{{reminder.status === 'warning' || reminder.status === 'expired'}}">
+          <text class="btn-icon">⏰</text>
+          <text class="btn-text">延期提醒</text>
+        </button>
+        
+        <button class="action-btn" bindtap="duplicateReminder">
+          <text class="btn-icon">📋</text>
+          <text class="btn-text">复制提醒</text>
+        </button>
+        
+        <button class="action-btn" bindtap="shareReminder">
+          <text class="btn-icon">📤</text>
+          <text class="btn-text">分享</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 相关建议 -->
+    <view class="info-card" wx:if="{{suggestions.length > 0}}">
+      <view class="card-header">
+        <text class="card-title">相关建议</text>
+      </view>
+      
+      <view class="suggestions-list">
+        <view class="suggestion-item" wx:for="{{suggestions}}" wx:key="id" bindtap="applySuggestion" data-suggestion="{{item}}">
+          <view class="suggestion-icon">
+            <text class="icon">{{item.icon}}</text>
+          </view>
+          <view class="suggestion-content">
+            <text class="suggestion-title">{{item.title}}</text>
+            <text class="suggestion-desc">{{item.description}}</text>
+          </view>
+          <view class="suggestion-arrow">
+            <text class="icon">→</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="editReminder">
+      <text class="btn-icon">✏️</text>
+      <text class="btn-text">编辑</text>
+    </button>
+    
+    <button class="action-btn danger" bindtap="deleteReminder">
+      <text class="btn-icon">🗑️</text>
+      <text class="btn-text">删除</text>
+    </button>
+  </view>
+
+  <!-- 延期选择弹窗 -->
+  <view class="modal-overlay" wx:if="{{showSnoozeModal}}" bindtap="hideSnoozeModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">延期提醒</text>
+        <button class="modal-close" bindtap="hideSnoozeModal">×</button>
+      </view>
+      
+      <view class="modal-body">
+        <view class="snooze-options">
+          <button class="snooze-option" wx:for="{{snoozeOptions}}" wx:key="value" 
+                  bindtap="selectSnooze" data-days="{{item.value}}">
+            <text class="option-icon">{{item.icon}}</text>
+            <text class="option-text">{{item.text}}</text>
+          </button>
+        </view>
+        
+        <view class="custom-snooze">
+          <text class="custom-label">自定义延期天数：</text>
+          <input class="custom-input" type="number" placeholder="输入天数" 
+                 bindinput="onCustomSnoozeInput" value="{{customSnoozeDays}}" />
+          <button class="custom-confirm" bindtap="confirmCustomSnooze" 
+                  disabled="{{!customSnoozeDays}}">确定</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">{{loadingText}}</text>
+    </view>
+  </view>
+</view>
